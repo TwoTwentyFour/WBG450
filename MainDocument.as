@@ -3,17 +3,18 @@
 	import flash.display.MovieClip;
 	import flash.display.Stage;
 	import Login;
-	// import Register;  // Week 7 & 8
-	//import Chat;
+	//import Register;
+	import Chat;
 	import Console;
 	//import BetCon;
-	import flash.events.MouseEvent;		
+	import flash.events.MouseEvent;	
+	
 	
 	public class MainDocument extends MovieClip {
 		
 		private var login:Login;
 		//private var register:Register;
-		//private var chat:Chat;
+		private var chat:Chat;
 		private var console:Console;
 		public static var consoleIsCreated:Boolean = false;
 		public static var STAGE:Stage;
@@ -30,10 +31,11 @@
 		public static var winningPot:uint = 0;
 		public static var winningPlayer:uint;
 		public static var winningHand:String;		
-		public static var localPath:String = "http://student.mydevryportfolio.com/wbg450/";	
+		public static var localPath:String = "";	
 		
 		public function MainDocument() {
-			// constructor code				
+			// constructor code	
+			
 			STAGE = stage;		
 			doc = this;
 			//Show the disabled game console 
@@ -42,9 +44,9 @@
 			selectLogin_btn.addEventListener(MouseEvent.MOUSE_UP,showLogin);
 			selectRegister_btn.addEventListener(MouseEvent.MOUSE_UP,showRegister);
 			
-			// Set up listeners for UI console and chat buttons
+			// Set up listeners for UI cosile and chat buttons
 			selectChat_btn.addEventListener(MouseEvent.MOUSE_UP,showChat);
-			selectConsole_btn.addEventListener(MouseEvent.MOUSE_UP,showConsole);			
+			selectConsole_btn.addEventListener(MouseEvent.MOUSE_UP,showConsole);	
 			
 			
 		} // end constructor function
@@ -105,10 +107,8 @@
 		// Chat window can be instantiated and then removed
 		// to save bandwidth when not in use
 		//////////////////////////////////////////////////////
-		
 		private function showChat(e:MouseEvent):void{
 			trace("open chat window");
-			/*
 			showMsg("");
 			toggle_chat_console_buttons();
 			chat = new Chat();
@@ -117,14 +117,12 @@
 			// Instanttiate chat window on stage
 			addChild(chat);
 			chat.name = "Chat";
-			STAGE.focus = chat.myChat_txt;	
-			*/
+			STAGE.focus = chat.myChat_txt;			
 		} // end function
 		
 		private function showRegister(e:MouseEvent):void{
 			trace("register user");
-			// week 7 or 8 
-			/*
+			/*  week 7 or 8
 			for(var i:uint=0;i<numChildren;i++){
 				if(getChildAt(i).name == "Login"){
 					removeLogin();
@@ -139,7 +137,7 @@
 			STAGE.focus = register.fullname_txt;
 			showMsg("");
 			turnOffButton("both"); // makes login and register buttons visible or invisible	
-				*/
+			*/
 		} // end function
 		
 		private function showLogin(e:MouseEvent):void{
@@ -161,11 +159,9 @@
 		
 		
 		public function removeChat():void{
-			/*
 			chat.dispose();	// cleans up all listners from instance
 			removeChild(chat); // removes instance from the display
 			chat = null; // renders instance available for garbage collection
-			*/
 		} // end function
 		
 		
@@ -174,7 +170,7 @@
 		} // end function
 		
 		public function removeRegister():void{
-			// removeChild(register); //week 8
+			//removeChild(register); // week 7 or 8
 		} // end function
 		
 		public function playerTitle(s:String):void{
@@ -200,7 +196,6 @@
 						
 		}// function
 		
-		// Makes Login & register buttons visible as needed
 		public function turnOnButton(btn:String):void{
 			switch (btn){
 				case "login" :

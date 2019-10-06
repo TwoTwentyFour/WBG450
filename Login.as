@@ -66,8 +66,8 @@
 			
 			function retrieveData(e:Event):void { 		
 				var rawString:String = trimWhitespace(unescape(e.target.data));
-				trace("rawstring = " + rawString);
-				//trace("myStatus = " + trimWhitespace(e.target.data.myStatus));
+				trace("e.target.data = " + e.target.data);
+				trace("myStatus = " + trimWhitespace(e.target.data.myStatus));
 				var stArray:Array = rawString.split("&");
 				trace(stArray);
 				for(var i:uint; i<stArray.length; i++){

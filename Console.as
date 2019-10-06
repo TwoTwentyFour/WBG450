@@ -3,8 +3,6 @@
 	import flash.display.MovieClip;
 	import flash.events.*;
 	import MainDocument;
-	//import GameServer;
-	//import GameClient;
 	import flash.net.*;
 	import flash.display.SimpleButton;	
 	import flash.ui.Keyboard;
@@ -20,11 +18,12 @@
 	public class Console extends MovieClip {
 		//===============================================================
 		// SERVER COMM - Set up server communications variables
-		//===============================================================		
+		//===============================================================
+		
 		
 		// Timer for checking games availability
 		private var timeToCheckGames:Timer = new Timer(10000,1);
-		private var timeToCheckForPlayers:Timer = new Timer(5000,1);
+		private var timeToCheckForPlayers:Timer = new Timer(10000,1);
 		private var timeToCheckForGameStart:Timer = new Timer(5000,1);
 		
 		// Variables to hold data for transfer to and from server
@@ -64,7 +63,8 @@
 		private var new_game_btn:Button;
 		private var new_game_begin_btn:Button;
 		private var select_game_btn:Button;		
-		private static var game_stats_txt:TextArea;				
+		private static var game_stats_txt:TextArea;
+				
 		
 		//===============================================================
 		// TRACKING VARIABLES
@@ -134,7 +134,9 @@
 			game_stats_txt.height = 130;				
 			game_stats_txt.verticalScrollPolicy="auto";					
 			
-			this.addChild(game_stats_txt);						
+			this.addChild(game_stats_txt);			
+			
+			
 			
 			//************ Set up listeners for start/select game buttons **************
 			new_game_btn.addEventListener(MouseEvent.CLICK,startNewGame);
@@ -185,7 +187,7 @@
 			} // end if
 			current_game_lb.enabled = true;		
 			
-		} // end function		
+		} // end function
 		
 		//===========================================================================================
 		// SHOW GAMES - Displays updated list of games as init or as handler for timer complete event
@@ -194,7 +196,8 @@
 		private function showGames(e:TimerEvent):void{
 			// send request for continuing data -- check data
 			trace("showgames");
-			getGamesVars.p_id = MainDocument.player_id;			
+			getGamesVars.p_id = MainDocument.player_id;
+			trace("p_id= " + getGamesVars.p_id );
 			getGamesReq.method = URLRequestMethod.POST;
 			getGamesReq.data = getGamesVars;						
 			getGamesLoader.dataFormat = URLLoaderDataFormat.VARIABLES;
@@ -208,7 +211,8 @@
 			// ************ Complete Handler for showgames **************
 			private function retrieveData(e:Event):void{
 				var rawString:String = trimWhitespace(unescape(e.target.data));
-				var stArray:Array = rawString.split("&");				
+				var stArray:Array = rawString.split("&");
+				trace("Console-stArray= " + stArray);
 				for(var i:uint; i<stArray.length; i++){
 					stArray[i] = trimWhitespace(stArray[i]);
 					var pair:Array = stArray[i].split("=");
@@ -225,7 +229,8 @@
 					} // end switch
 				} //end for 					
 				
-				if(ms == "NOTOK"){					
+				if(ms == "NOTOK"){
+					trace("In NOTOK");
 					var dp:DataProvider = new DataProvider();
 					dp.addItem({label:"No current games"});
 					games_lb.dataProvider = dp;
@@ -262,7 +267,9 @@
 			// ******************** Handles selection from above list listener
 			private function getSelection(e:Event):void{
 				savedGamesListIndex = e.target.selectedIndex;
-				var x:String = e.target.selectedItem.label;				
+				var x:String = e.target.selectedItem.label;
+				trace("selectedIndex= " + savedGamesListIndex);
+				trace("xx= " + x);
 			} //end function
 			
 		//==============================================================================
@@ -272,7 +279,8 @@
 		//  Script: initNewGame.php
 		//==============================================================================
 		private function startNewGame(evt:MouseEvent):void{
-			trace("Start New Game Function");			
+			trace("Start New Game Function");
+			
 			// Disable games_lb, listeners and buttons
 			games_lb.enabled = false;
 			select_game_btn.enabled = false;
@@ -282,7 +290,9 @@
 			
 			// Disable new_game_btn and listener
 			new_game_btn.enabled = false;
-			new_game_btn.removeEventListener(MouseEvent.CLICK,startNewGame);							
+			new_game_btn.removeEventListener(MouseEvent.CLICK,startNewGame);			
+			
+			// Create and start clock and show on stage	-- maybe				
 			
 			// Update dB - insert new game - return 
 			newGameVars.p_id = MainDocument.player_id;			
@@ -300,7 +310,8 @@
 			//=================================================================
 			private function startNewGameOnComplete(e:Event):void{
 				var rawString:String = trimWhitespace(unescape(e.target.data));
-				var stArray:Array = rawString.split("&");				
+				var stArray:Array = rawString.split("&");
+				trace("Console-stArray= " + stArray);
 				for(var i:uint; i<stArray.length; i++){
 					stArray[i] = trimWhitespace(stArray[i]);
 					var pair:Array = stArray[i].split("=");
@@ -327,17 +338,21 @@
 						break;
 					case "OK":
 						// Log in current game ID
-						MainDocument.currentGame = int(g_id);						
+						MainDocument.currentGame = int(g_id);
+						trace("Game logged, id= " + g_id);
 						// Insert player into current game 1st position as dealer/admin
 						var dealer:String = "Dealer: " + MainDocument.player_name;
 						var d:DataProvider = new DataProvider();
-						MainDocument.doc.playerTitle(dealer);										
+						MainDocument.doc.playerTitle(dealer);
+						
+						
 						current_game_lb.dataProvider = d;
 						d.addItemAt({label:dealer,data:MainDocument.player_id},0);
 						// Message to user
 						MainDocument.doc.showMsg("New game started--awaiting more players");
 						MainDocument.numPlayers = 1;
-						MainDocument.dealer = true;						
+						MainDocument.dealer = true;
+						
 						// Set listener and start timer to check for new players for this game
 						timeToCheckForPlayers.addEventListener(TimerEvent.TIMER_COMPLETE,checkForPlayers);
 						timeToCheckForPlayers.start();
@@ -352,10 +367,13 @@
 		// CHECKS server database FOR NEW PLAYERS for game started -- handles 
 		// timer/listener and sets listener for complete, resets clock for this function
 		//==============================================================================
-		private function checkForPlayers(e:Event):void{			
+		private function checkForPlayers(e:Event):void{
+			trace("Checking for players");
 			// Set up send variables
-			getPlayersVars.g_id = MainDocument.currentGame;			
-			getPlayersVars.g_num_players = MainDocument.numPlayers;			
+			getPlayersVars.g_id = MainDocument.currentGame;
+			trace("getPlayersVars.g_id = " + getPlayersVars.g_id );
+			getPlayersVars.g_num_players = MainDocument.numPlayers;
+			trace("getPlayersVars.g_num_players = " + getPlayersVars.g_num_players );
 			getPlayersReq.method = URLRequestMethod.POST;
 			getPlayersReq.data = getPlayersVars;						
 			getPlayersLoader.dataFormat = URLLoaderDataFormat.VARIABLES;
@@ -367,30 +385,9 @@
 		} //end function
 		
 			//******************** Handles complete event for above *********************
-			private function checkForPlayersComplete(e:Event):void{				
-				var rawString:String = trimWhitespace(unescape(e.target.data));				
-				var stArray:Array = rawString.split("&");				
-				for(var i:uint=0; i < stArray.length; i++){					
-					var pair:Array = stArray[i].split("=");
-					pair[0] = trimWhitespace(pair[0]);
-					switch (pair[0]){
-						case "myStatus":
-						  	var ms:String = trimWhitespace(pair[1]);    //  status data value
-							trace("Console-case-ms= " + ms);
-						  	break;
-						case "g_num_players":
-							var g_num_players:String = trimWhitespace(pair[1]);
-							trace("Console-case-g_num_players= " + g_num_players);
-							break;
-						case "playerStr":
-						  	var S:String = trimWhitespace(pair[1]);  // output string
-							trace("Console-case-S= " + S);
-							break;
-						default: // this is all the other garbage---> dump
-						    trace("Console-default: garbage");
-							//do nothing
-					} // end switch
-				} //end for 			
+			private function checkForPlayersComplete(e:Event):void{
+				trace("checkForPlayersComplete");
+				var ms:String = e.target.data.myStatus;
 				
 				if(ms == "OK"){
 					var dp:DataProvider = new DataProvider();
@@ -398,24 +395,25 @@
 					
 					var lineArray:Array = new Array();
 					var fieldArray:Array = new Array();
-					var j:uint = new uint();					
+					var i:uint = new uint();
 					
-					MainDocument.numPlayers = int(g_num_players);
+					var S:String = e.target.data.playerStr;
+					MainDocument.numPlayers = e.target.data.g_num_players;
 					trace("Players data " + S);
 					trace("NumPlayers = " + MainDocument.numPlayers);				
 					
 					lineArray = S.split("^");
-					for(j=0;j<lineArray.length;j++){
-						fieldArray = lineArray[j].split("|");					
-						if (j==0){
-							dp.addItemAt({label:"Dealer:   " + fieldArray[1],data:fieldArray[0]},j);
+					for(i=0;i<lineArray.length;i++){
+						fieldArray = lineArray[i].split("|");					
+						if (i==0){
+							dp.addItemAt({label:"Dealer:   " + fieldArray[1],data:fieldArray[0]},i);
 						}else{
-							dp.addItemAt({label:"Player " + (j+1) + " " + fieldArray[1],data:fieldArray[0]},j);
+							dp.addItemAt({label:"Player " + (i+1) + " " + fieldArray[1],data:fieldArray[0]},i);
 						} // end if
 						//Update MainDocument players array
 						if(MainDocument.dealer == true){
 							var g:Array = [fieldArray[0],fieldArray[1]];
-							MainDocument.currentGamePlayers[j] = g;
+							MainDocument.currentGamePlayers[i] = g;
 						}
 						
 					} //end for
@@ -454,14 +452,17 @@
 		// JOIN A SELECTED GAME (selected from Games List box)
 		// Script: joinSelectedGame.php
 		//==================================================================================
-		private function joinSelectedGame(evt:MouseEvent):void{			
+		private function joinSelectedGame(evt:MouseEvent):void{
+			trace("Selected Working");
 			if(savedGamesListIndex == -1){
 				MainDocument.doc.showMsg("You must select a game before clicking this button");
 			}else{
 				//Message clear
-				MainDocument.doc.showMsg("");											
+				MainDocument.doc.showMsg("");
+											
 				// Send data to server script 
-				joinSelectedGameVars.g_id = games_lb.getItemAt(savedGamesListIndex).data;				
+				joinSelectedGameVars.g_id = games_lb.getItemAt(savedGamesListIndex).data;
+				trace("join selected game, id= " + joinSelectedGameVars.g_id);
 				joinSelectedGameVars.p_id = MainDocument.player_id;
 				joinSelectedGameReq.method = URLRequestMethod.POST;
 				joinSelectedGameReq.data = joinSelectedGameVars;						
@@ -480,8 +481,10 @@
 			//=============================================================================
 			private function joinSelectedGameComplete(e:Event):void{
 				var rawString:String = trimWhitespace(unescape(e.target.data));
-				var stArray:Array = rawString.split("&");				
-				for(var i:uint; i<stArray.length; i++){					
+				var stArray:Array = rawString.split("&");
+				trace("Console-stArray= " + stArray);
+				for(var i:uint; i<stArray.length; i++){
+					stArray[i] = trimWhitespace(stArray[i]);
 					var pair:Array = stArray[i].split("=");
 					pair[0] = trimWhitespace(pair[0]);
 					switch (pair[0]){
@@ -522,23 +525,27 @@
 						break;
 					default:
 						MainDocument.doc.showMsg("I/O or DB Error");
-				} // end switch								
+				} // end switch
+								
 				
 			} // end private function
 		
-		private function checkSelectedGameForStart(e:Event):void{			
+		private function checkSelectedGameForStart(e:Event):void{
+			trace("Check selected game for start");
 			MainDocument.doc.showMsg("Awaiting game to begin...");
 			checkSelectedGameForStartVars.g_id = MainDocument.currentGame;
 			checkSelectedGameForStartReq.method = URLRequestMethod.POST;
 			checkSelectedGameForStartReq.data = checkSelectedGameForStartVars;						
 			checkSelectedGameForStartLoader.dataFormat = URLLoaderDataFormat.VARIABLES;
 			checkSelectedGameForStartLoader.load(checkSelectedGameForStartReq);
-			checkSelectedGameForStartLoader.addEventListener(Event.COMPLETE, checkSelectedGameForStartComplete);			
+			checkSelectedGameForStartLoader.addEventListener(Event.COMPLETE, checkSelectedGameForStartComplete);
+			
 		} // end function
 		
 			private function checkSelectedGameForStartComplete(e:Event):void{
 				var rawString:String = trimWhitespace(unescape(e.target.data));
-				var stArray:Array = rawString.split("&");				
+				var stArray:Array = rawString.split("&");
+				trace("Console-stArray= " + stArray);
 				for(var i:uint; i<stArray.length; i++){
 					stArray[i] = trimWhitespace(stArray[i]);
 					var pair:Array = stArray[i].split("=");
@@ -553,7 +560,7 @@
 				} //end for 			
 				
 				if(ms=="GAME_STARTED"){
-					//MainDocument.doc.showMsg("Selected Game has started");
+					trace("Selected Game has started");
 					checkSelectedGameForStartLoader.removeEventListener(Event.COMPLETE, checkSelectedGameForStartComplete);					
 					timeToCheckForGameStart.removeEventListener(TimerEvent.TIMER_COMPLETE,checkSelectedGameForStart);
 					timeToCheckForGameStart.stop();
@@ -562,13 +569,14 @@
 					//reset clock to look for checking function
 					timeToCheckForGameStart.reset();
 					timeToCheckForGameStart.start();
-				} // end if-else
-			} //end function
+				}
+			}
 		//================================================================================
 		// BEGIN PLAY of local game when player is dealer
 		// Creates object instance of GameServer class and adds to stage
 		//================================================================================
-		private function beginGameServerPlay(evt:Event):void{			
+		private function beginGameServerPlay(evt:Event):void{
+			/* Not until week 6
 			// remove listener for button			
 			new_game_btn.removeEventListener(MouseEvent.CLICK,beginGameServerPlay);
 			// Shut down other listeners and timers
@@ -577,7 +585,7 @@
 			
 			new_game_begin_btn.removeEventListener(MouseEvent.CLICK,beginGameServerPlay);
 			new_game_begin_btn.enabled = false;
-			/*
+			
 			// Init GameServer passing array of players from MainDocument array of players
 			var GS:GameServer = new GameServer(MainDocument.currentGamePlayers);
 			GS.x = 0;
@@ -591,34 +599,20 @@
 		// BEGIN PLAY of local game when player is NOT the dealer (client)
 		// Creates object instance of GameClient class and adds to stage
 		//================================================================================
-		private function beginGameClientPlay(e:Event):void{			
+		private function beginGameClientPlay(e:Event):void{
+			/* not until week 6
 			// Get players into MainDocument and list
 			var dp:DataProvider = new DataProvider();
-			current_game_lb.dataProvider = dp;			
+			current_game_lb.dataProvider = dp;
+			
 			var lineArray:Array = new Array();
 			var fieldArray:Array = new Array();
 			var i:uint = new uint();
 			
-			var rawString:String = trimWhitespace(unescape(e.target.data));
-			var stArray:Array = rawString.split("&");
-			//MainDocument.doc.showMsg("Console-stArray-3= " + stArray);
-			for(i=0; i<stArray.length; i++){
-				stArray[i] = trimWhitespace(stArray[i]);
-				var pair:Array = stArray[i].split("=");
-				pair[0] = trimWhitespace(pair[0]);
-				switch (pair[0]){
-					case "playerStr":
-						var S:String = trimWhitespace(pair[1]);    //  status data value
-						break;		
-					case "g_num_players":
-						var g_num_players:String = trimWhitespace(pair[1]);    //  status data value
-						break;	
-					default: // this is all the other garbage---> dump
-						//do nothing
-				} // end switch
-			} //end for 				
-			
-			MainDocument.numPlayers = int(g_num_players);						
+			var S:String = e.target.data.playerStr;
+			MainDocument.numPlayers = e.target.data.g_num_players;
+			trace("Players data " + S);
+			trace("NumPlayers = " + MainDocument.numPlayers);				
 			
 			lineArray = S.split("^");
 			for(i=0;i<lineArray.length;i++){
@@ -630,17 +624,16 @@
 				} // end if
 				//Update MainDocument players array				
 				var g:Array = [fieldArray[0],fieldArray[1]];
-				MainDocument.currentGamePlayers[i] = g;				
+				MainDocument.currentGamePlayers[i] = g;		
 				
 			} //end for
-					/*
+					trace(MainDocument.currentGamePlayers);
 			// Init GameCLient 
 			var GC:GameClient = new GameClient(MainDocument.currentGamePlayers);
 			GC.x = 0;
 			GC.y = 0;
 			GC.name = "client";
 			MainDocument.doc.stage.addChild(GC);	
-			MainDocument.doc.showMsg("");
 			*/
 		} //end function
 		
