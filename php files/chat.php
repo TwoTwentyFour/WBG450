@@ -81,19 +81,19 @@ if ($_POST['requester'] == "chat_check") {
 		if ($latest_id > $stored_id) {			 
 			 $status_line = "is_new";
 			 $body = "";
-			 $query2 = "SELECT c.c_id,p.p_name,c.c_chat_body,c.c_timestamp FROM chat as c, player as p WHERE c.p_id = p.p_id ORDER BY c.c_timestamp DESC"; 
-			 $result2 = mysql_query($query2) or die("dB Error 3");				 
-			 $num2 = mysql_num_rows($result2) ;
+			 $query = "SELECT c.c_id,p.p_name,c.c_chat_body,c.c_timestamp FROM chat as c, player as p WHERE c.p_id = p.p_id ORDER BY c.c_timestamp DESC"; 
+			 $result = mysql_query($query) or die("dB Error 3");				 
+			 
 			 //process each row (chat row) and append into html body
-			for($i=0;$i<$num2;$i++){
-				$row2 = mysql_fetch_array($result2);
-				$id 			= $row2["c_id"];
-				$player_name 	= $row2["p_name"];
-				$chat_body 		= $row2["c_chat_body"];
-				$date_time 		= $row2["c_timestamp"];
+			for($i=0;$i<$num;$i++){
+				$row = mysql_fetch_array($result);
+				$id 			= $row["c_id"];
+				$player_name 	= $row["p_name"];
+				$chat_body 		= $row["c_chat_body"];
+				$date_time 		= $row["c_timestamp"];
 				$chat_body 		= stripslashes($chat_body);
 					
-				if($i < $num2-1){
+				if($i < $num-1){
 					$body .= $player_name . "|" .  $date_time . "|" . $chat_body . "^";
 				}else{
 					$body .= $player_name . "|" .  $date_time . "|" . $chat_body;
@@ -165,7 +165,7 @@ if ($_POST['requester'] == "new_chat") {
 		
 	$status_line = "new_insert";
     print "stored_id=" . trim($latest_id) . "&statusline=" . trim($status_line) . "&returnBody=" . trim($body) . "&dummy=dummy";
-} // end if
+			}
 
 				
 				
